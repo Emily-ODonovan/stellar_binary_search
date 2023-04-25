@@ -7,11 +7,12 @@ use std::path::Path;
 fn main() {
     println!("Hello, {}!", "rusty");
     //Place each of the below into seperate rust modules (files)
-    //generate reference points on first run
+    //generate reference points on first run --DONE!!!
     let star_at = binary_interpretation();
     //genereates star_triples on second, file read can be excluded
-    //generates misc star data on third
-    
+    //--TODO generate_star_triples(star_at);
+    //generates misc star data on third -> file
+    //--TODO generate_misc_star_data(star_at);
 }
 
 fn binary_interpretation() -> Vec<StarAt> {
