@@ -8,14 +8,14 @@ fn main() {
     println!("Hello, {}!", "rusty");
     //Place each of the below into seperate rust modules (files)
     //generate reference points on first run --DONE!!!
-    let star_at = binary_interpretation();
+    let star_at = file_to_stars();
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
     //generates misc star data on third -> file
-    //--TODO generate_misc_star_data(star_at);
+    let star_info = star_info_extractor(); 
 }
 
-fn binary_interpretation() -> Vec<StarAt> {
+fn file_to_stars() -> Vec<StarAt> {
     let mut star_at: Vec<StarAt> = Vec::new();
     //if result is Ok, opens the file and puts it into buffer "lines"
     if let Ok(lines) = read_lines("asuNoHeader.tsv") {
@@ -46,7 +46,52 @@ fn binary_interpretation() -> Vec<StarAt> {
     star_at
 }
 
-
+fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
+    let mut star_at: Vec<Star> = Vec::new();
+    //if result is Ok, opens the file and puts it into buffer "lines"
+    if let Ok(lines) = read_lines("asuNoHeader.tsv") {
+        // consumes lines and iterates over each line
+        for line in lines {
+            //if line sucessfully covertts to string it is consumed
+            if let Ok(ip) = line {
+                println!("{}", ip);
+                let mut data = ip.split(";"); //returns a mutable iterator
+                let stars = Star {
+                    bright_star_num: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the bright_star_num
+                        None => break, //breaks the loop if there is no data
+                    },
+                    name: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the name
+                        None => break, //breaks the loop if there is no data
+                    },
+                    durchmusterung: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the durchmusterung
+                        None => break, //breaks the loop if there is no data
+                    },
+                    sao: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the sao
+                        None => break, //breaks the loop if there is no data
+                    },
+                    fk5: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the fk5
+                        None => break, //breaks the loop if there is no data
+                    },
+                    visual_mag: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the visual_mag
+                        None => break, //breaks the loop if there is no data
+                    },
+                    visual_mag_code: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the visual_mag
+                        None => break, //breaks the loop if there is no data
+                    }
+                };
+                star_at.push(stars);
+            }
+        }
+    }
+    star_at
+}
 //// Returns an Iterator wrapped in a result to the Reader of the lines of the file.
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
