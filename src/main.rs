@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn binary_interpretation() -> Vec<StarAt> {
-    let star_at: Vec<StarAt> = Vec::new();
+    let mut star_at: Vec<StarAt> = Vec::new();
     //if result is Ok, opens the file and puts it into buffer "lines"
     if let Ok(lines) = read_lines("asuNoHeader.tsv") {
         // consumes lines and iterates over each line
@@ -23,7 +23,22 @@ fn binary_interpretation() -> Vec<StarAt> {
             //if line sucessfully covertts to string it is consumed
             if let Ok(ip) = line {
                 println!("{}", ip);
-                ip.split(";");
+                let mut data = ip.split(";"); //returns a mutable iterator
+                let star = StarAt {
+                    bright_star_num: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the bright_star_num
+                        None => break, //breaks the loop if there is no data
+                    },
+                    galactic_long: match data.nth(13) {
+                        Some(x) => x.parse().unwrap(), //returns the galactic_long
+                        None => break, //breaks the loop if there is no data
+                    },
+                    galactic_lat: match data.nth(0) {
+                        Some(x) => x.parse().unwrap(), //returns the galactic_long
+                        None => break, //breaks the loop if there is no data
+                    }
+                };
+                star_at.push(star);
             }
         }
     }
@@ -52,8 +67,8 @@ struct Star {
 
 struct StarAt {
     pub bright_star_num: u32, 
-    pub galactic_long: u64, //galactic longitude 5 bytes
-    pub galactic_lat: u64 //galactic latitude
+    pub galactic_long: f64, //galactic longitude 5 bytes
+    pub galactic_lat: f64 //galactic latitude
 }
 
 
@@ -61,5 +76,5 @@ struct star_triple {
     pub bsm_1: u32, //bright star number 1
     pub bsm_2: u32, //bright star number 2
     pub bsm_3: u32, //bright star number 3
-    pub angle: u64 //angle between the 3 stars
+    pub angle: f64 //angle between the 3 stars
 }
