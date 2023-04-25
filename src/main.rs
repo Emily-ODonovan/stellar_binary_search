@@ -23,7 +23,7 @@ fn binary_interpretation() -> Vec<StarAt> {
             //if line sucessfully covertts to string it is consumed
             if let Ok(ip) = line {
                 println!("{}", ip);
-                
+                ip.split(";");
             }
         }
     }
