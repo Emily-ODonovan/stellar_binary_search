@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::num::ParseFloatError;
 use std::path::Path;
 
 
@@ -14,36 +13,51 @@ fn main() {
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
     //generates misc star data on third -> file
-    // let star_info = star_info_extractor(); 
+    let star_info = star_info_extractor();
+    star_info.iter().for_each(|x| println!("{} {} {} {} {} {} {}", x.bright_star_num, x.name, x.durchmusterung, x.sao, x.fk5, x.visual_mag, x.visual_mag_code));
 }
 
 fn file_to_stars() -> Vec<StarAt> {
-    let mut star_at: Vec<StarAt> = Vec::new();
+    let mut stars_at: Vec<StarAt> = Vec::new();
     //if result is Ok, opens the file and puts it into buffer "lines"
     if let Ok(lines) = read_lines("asuNoHeader.tsv") {
         // consumes lines and iterates over each line
         for line in lines {
-            //if line sucessfully covertts to string it is consumed
+            //will always run until end of file
             if let Ok(ip) = line {
-                let star = panic_or_stars(ip);
+                let star = stars_or_bust(ip);
+                //catches any errors
                 if star.is_ok() {
-                    star_at.push(star.unwrap());
+                    stars_at.push(star.unwrap());
                 }
             }
         }
     }
-    // print!("number of stars: {}", star_at.len());
-    star_at
+    stars_at
 }
 
-fn panic_or_stars(line: String) -> Result<StarAt, Box<dyn std::error::Error>> {
+fn stars_or_bust(line: String) -> Result<StarAt, Box<dyn std::error::Error>> {
     let mut data: std::str::Split<&str> = line.split(";"); //returns a mutable iterator
-    let star: StarAt = StarAt {
-        bright_star_num: data.nth(0).ok_or("End of File")?.to_string().trim().parse::<u32>().unwrap(),
-        galactic_long: data.nth(13).ok_or("End of File")?.to_string().trim().parse().unwrap_or(0.0), //returns the bright_star_num WILL ALWAYS HAVE DATA
-        galactic_lat: data.nth(0).ok_or("End of File")?.to_string().trim().parse().unwrap_or(0.0), // the bright_star_num WILL ALWAYS HAVE DATA
+    let star: StarAt = StarAt { //ok or only exists to catch a theoretical error in the case of exceeding the iterator and takes place before any real errors can occur
+        bright_star_num: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap(),
+        galactic_long: data.nth(13).ok_or("")?.to_string().trim().parse().unwrap_or(0.0), //0.0 will only occur in absense of coordinates
+        galactic_lat: data.nth(0).ok_or("")?.to_string().trim().parse().unwrap_or(0.0), //TODO: IGNORE 0.0
     };
     Ok(star)
+}
+
+fn info_or_bust(line: String) -> Result<Star, Box<dyn std::error::Error>> {
+    let mut data: std::str::Split<&str> = line.split(";"); //returns a mutable iterator
+    let stars: Star = Star {
+        bright_star_num: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap(),
+        name: data.nth(0).ok_or("")?.to_string(),
+        durchmusterung: data.nth(0).ok_or("")?.to_string(),
+        sao: data.nth(1).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
+        fk5: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap_or(0),
+        visual_mag: data.nth(10).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
+        visual_mag_code: data.nth(0).ok_or("")?.to_string().trim().parse::<u8>().unwrap_or(0)
+    };
+    Ok(stars)
 }
 
 fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
@@ -54,39 +68,10 @@ fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
         for line in lines {
             //if line sucessfully covertts to string it is consumed
             if let Ok(ip) = line {
-                println!("{}", ip);
-                let mut data = ip.split(";"); //returns a mutable iterator
-                let stars = Star {
-                    bright_star_num: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the bright_star_num
-                        None => break, //breaks the loop if there is no data
-                    },
-                    name: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the name
-                        None => break, //breaks the loop if there is no data
-                    },
-                    durchmusterung: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the durchmusterung
-                        None => break, //breaks the loop if there is no data
-                    },
-                    sao: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the sao
-                        None => break, //breaks the loop if there is no data
-                    },
-                    fk5: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the fk5
-                        None => break, //breaks the loop if there is no data
-                    },
-                    visual_mag: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the visual_mag
-                        None => break, //breaks the loop if there is no data
-                    },
-                    visual_mag_code: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the visual_mag
-                        None => break, //breaks the loop if there is no data
-                    }
-                };
-                star_at.push(stars);
+                let star = info_or_bust(ip);
+                if star.is_ok() {
+                    star_at.push(star.unwrap());
+                }
             }
         }
     }
