@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::num::ParseFloatError;
 use std::path::Path;
 
 
@@ -8,11 +9,12 @@ fn main() {
     println!("Hello, {}!", "rusty");
     //Place each of the below into seperate rust modules (files)
     //generate reference points on first run --DONE!!!
-    let star_at = file_to_stars();
+    let star_at: Vec<StarAt> = file_to_stars();
+    star_at.iter().for_each(|x| println!("{} {} {}", x.bright_star_num, x.galactic_long, x.galactic_lat));
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
     //generates misc star data on third -> file
-    let star_info = star_info_extractor(); 
+    // let star_info = star_info_extractor(); 
 }
 
 fn file_to_stars() -> Vec<StarAt> {
@@ -23,27 +25,25 @@ fn file_to_stars() -> Vec<StarAt> {
         for line in lines {
             //if line sucessfully covertts to string it is consumed
             if let Ok(ip) = line {
-                println!("{}", ip);
-                let mut data = ip.split(";"); //returns a mutable iterator
-                let star = StarAt {
-                    bright_star_num: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the bright_star_num
-                        None => break, //breaks the loop if there is no data
-                    },
-                    galactic_long: match data.nth(13) {
-                        Some(x) => x.parse().unwrap(), //returns the galactic_long
-                        None => break, //breaks the loop if there is no data
-                    },
-                    galactic_lat: match data.nth(0) {
-                        Some(x) => x.parse().unwrap(), //returns the galactic_long
-                        None => break, //breaks the loop if there is no data
-                    }
-                };
-                star_at.push(star);
+                let star = panic_or_stars(ip);
+                if star.is_ok() {
+                    star_at.push(star.unwrap());
+                }
             }
         }
     }
+    // print!("number of stars: {}", star_at.len());
     star_at
+}
+
+fn panic_or_stars(line: String) -> Result<StarAt, Box<dyn std::error::Error>> {
+    let mut data: std::str::Split<&str> = line.split(";"); //returns a mutable iterator
+    let star: StarAt = StarAt {
+        bright_star_num: data.nth(0).ok_or("End of File")?.to_string().trim().parse::<u32>().unwrap(),
+        galactic_long: data.nth(13).ok_or("End of File")?.to_string().trim().parse().unwrap_or(0.0), //returns the bright_star_num WILL ALWAYS HAVE DATA
+        galactic_lat: data.nth(0).ok_or("End of File")?.to_string().trim().parse().unwrap_or(0.0), // the bright_star_num WILL ALWAYS HAVE DATA
+    };
+    Ok(star)
 }
 
 fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
@@ -92,7 +92,9 @@ fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
     }
     star_at
 }
-//// Returns an Iterator wrapped in a result to the Reader of the lines of the file.
+
+
+// Returns an Iterator wrapped in a result to the Reader of the lines of the file.
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
     let file = File::open(filename)?;
