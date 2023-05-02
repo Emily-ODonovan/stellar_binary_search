@@ -1,20 +1,19 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
-
-
+use firestore::*;
 
 fn main() {
     println!("Hello, {}!", "rusty");
     //Place each of the below into seperate rust modules (files)
     //generate reference points on first run --DONE!!!
-    let star_at: Vec<StarAt> = file_to_stars();
-    star_at.iter().for_each(|x| println!("{} {} {}", x.bright_star_num, x.galactic_long, x.galactic_lat));
+    // let star_at: Vec<StarAt> = file_to_stars();
+    // star_at.iter().for_each(|x| println!("{} {} {}", x.bright_star_num, x.galactic_long, x.galactic_lat));
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
     //generates misc star data on third -> file
     let star_info = star_info_extractor();
-    star_info.iter().for_each(|x| println!("{} {} {} {} {} {} {}", x.bright_star_num, x.name, x.durchmusterung, x.sao, x.fk5, x.visual_mag, x.visual_mag_code));
+    star_info.iter().for_each(|x| println!("number: {} name: {} durch: {} sao: {} fk5: {} long: {} lat: {}", x.bright_star_num, x.name, x.durchmusterung, x.sao, x.fk5, x.galactic_long, x.galactic_lat));
 }
 
 fn file_to_stars() -> Vec<StarAt> {
@@ -53,11 +52,9 @@ fn info_or_bust(line: String) -> Result<Star, Box<dyn std::error::Error>> {
         name: data.nth(0).ok_or("")?.to_string(),
         durchmusterung: data.nth(0).ok_or("")?.to_string(),
         sao: data.nth(1).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
-        fk5: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap_or(0),
+        fk5: data.nth(0).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
         galactic_long: data.nth(8).ok_or("")?.to_string().trim().parse().unwrap_or(0.0),
         galactic_lat: data.nth(0).ok_or("")?.to_string().trim().parse().unwrap_or(0.0),
-        visual_mag: data.nth(0).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
-        visual_mag_code: data.nth(0).ok_or("")?.to_string().trim().parse::<u8>().unwrap_or(0)
     };
     Ok(stars)
 }
@@ -80,7 +77,6 @@ fn star_info_extractor() -> Vec<Star> {  //TODO: set correct "nth" values
     star_at
 }
 
-
 // Returns an Iterator wrapped in a result to the Reader of the lines of the file.
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -88,16 +84,12 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-
-
 struct Star {
     pub bright_star_num: u32, 
     pub name: String, //bayer or flamsteed designation
     pub durchmusterung: String, 
     pub sao: u64, //SAO catalogue number
-    pub fk5: u32, //FK5 catalogue number
-    pub visual_mag: u64, //visual magnitude
-    pub visual_mag_code: u8, //visual magnitude code
+    pub fk5: u64, //FK5 catalogue number
     pub galactic_long: f64, //galactic longitude 5 bytes
     pub galactic_lat: f64 //galactic latitude
 
