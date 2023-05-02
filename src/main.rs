@@ -41,7 +41,7 @@ fn stars_or_bust(line: String) -> Result<StarAt, Box<dyn std::error::Error>> {
     let star: StarAt = StarAt { //ok or only exists to catch a theoretical error in the case of exceeding the iterator and takes place before any real errors can occur
         bright_star_num: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap(),
         galactic_long: data.nth(13).ok_or("")?.to_string().trim().parse().unwrap_or(0.0), //0.0 will only occur in absense of coordinates
-        galactic_lat: data.nth(0).ok_or("")?.to_string().trim().parse().unwrap_or(0.0), //TODO: IGNORE 0.0
+        galactic_lat: data.nth(0).ok_or("")?.to_string().trim().parse().unwrap_or(0.0), 
     };
     Ok(star)
 }
@@ -54,7 +54,9 @@ fn info_or_bust(line: String) -> Result<Star, Box<dyn std::error::Error>> {
         durchmusterung: data.nth(0).ok_or("")?.to_string(),
         sao: data.nth(1).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
         fk5: data.nth(0).ok_or("")?.to_string().trim().parse::<u32>().unwrap_or(0),
-        visual_mag: data.nth(10).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
+        galactic_long: data.nth(8).ok_or("")?.to_string().trim().parse().unwrap_or(0.0),
+        galactic_lat: data.nth(0).ok_or("")?.to_string().trim().parse().unwrap_or(0.0),
+        visual_mag: data.nth(0).ok_or("")?.to_string().trim().parse::<u64>().unwrap_or(0),
         visual_mag_code: data.nth(0).ok_or("")?.to_string().trim().parse::<u8>().unwrap_or(0)
     };
     Ok(stars)
@@ -95,7 +97,10 @@ struct Star {
     pub sao: u64, //SAO catalogue number
     pub fk5: u32, //FK5 catalogue number
     pub visual_mag: u64, //visual magnitude
-    pub visual_mag_code: u8 //visual magnitude code
+    pub visual_mag_code: u8, //visual magnitude code
+    pub galactic_long: f64, //galactic longitude 5 bytes
+    pub galactic_lat: f64 //galactic latitude
+
 }
 
 struct StarAt {
