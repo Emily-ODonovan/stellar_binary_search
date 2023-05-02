@@ -15,6 +15,9 @@ fn main() {
     star_info.iter().for_each(|x| println!("number: {} name: {} durch: {} sao: {} fk5: {} long: {} lat: {}", x.bright_star_num, x.name, x.durchmusterung, x.sao, x.fk5, x.galactic_long, x.galactic_lat));
 }
 
+//TODO send a goofy collection of data to the database
+
+
 fn file_to_stars() -> Vec<StarAt> {
     let mut stars_at: Vec<StarAt> = Vec::new();
     //if result is Ok, opens the file and puts it into buffer "lines"
@@ -83,6 +86,7 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
+//TODO: IMPL Star -> DB
 struct Star {
     pub bright_star_num: u32, 
     pub name: String, //bayer or flamsteed designation
@@ -94,13 +98,14 @@ struct Star {
 
 }
 
+//TODO: generate star triples
 struct StarAt {
     pub bright_star_num: u32, 
     pub galactic_long: f64, //galactic longitude 5 bytes
     pub galactic_lat: f64 //galactic latitude
 }
 
-
+//TODO: IMPL StarAt -> DB
 struct star_triple {
     pub bsm_1: u32, //bright star number 1
     pub bsm_2: u32, //bright star number 2
