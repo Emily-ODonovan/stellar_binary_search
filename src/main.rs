@@ -1,14 +1,13 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
-use firestore::*;
 
 fn main() {
     println!("Hello, {}!", "rusty");
     //Place each of the below into seperate rust modules (files)
     //generate reference points on first run --DONE!!!
-    // let star_at: Vec<StarAt> = file_to_stars();
-    // star_at.iter().for_each(|x| println!("{} {} {}", x.bright_star_num, x.galactic_long, x.galactic_lat));
+    let star_at: Vec<StarAt> = file_to_stars();
+    star_at.iter().for_each(|x| println!("{} {} {}", x.bright_star_num, x.galactic_long, x.galactic_lat));
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
     //generates misc star data on third -> file
