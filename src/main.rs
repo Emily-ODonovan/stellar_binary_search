@@ -95,9 +95,26 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
 
 fn star_triple_generator() -> Vec<StarTriple> {
     let many_star: Vec<StarAt> = file_to_stars();
+    let cartesian: Vec<StarAtCartesian> = cartesian_product(many_star);
     let mut star_triples: Vec<StarTriple> = Vec::new();
 
     star_triples
+}
+
+fn cartesian_product(stars_at: Vec<StarAt>) -> Vec<StarAtCartesian> {
+    let mut cartesian: Vec<(StarAtCartesian)> = Vec::new();
+    
+    stars_at.iter().for_each(|gal| {
+        let star_at_cartesian: StarAtCartesian = StarAtCartesian {
+            bright_star_num: gal.bright_star_num,
+            x: gal.galactic_long.cos() * gal.galactic_lat.cos(),
+            y: gal.galactic_long.sin() * gal.galactic_lat.cos(),
+            z: gal.galactic_lat.sin(),
+        };
+        println!("number: {} x: {} y: {} z: {}", star_at_cartesian.bright_star_num, star_at_cartesian.x, star_at_cartesian.y, star_at_cartesian.z);
+        cartesian.push(star_at_cartesian);
+    });
+    cartesian
 }
 
 fn file_to_stars() -> Vec<StarAt> {
@@ -236,6 +253,12 @@ struct StarAt {
     pub bright_star_num: u32,
     pub galactic_long: f64, //galactic longitude 5 bytes
     pub galactic_lat: f64,  //galactic latitude
+}
+struct StarAtCartesian {
+    pub bright_star_num: u32,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
