@@ -102,6 +102,11 @@ fn star_triple_generator() -> Vec<StarTriple> {
     let star_triples: Vec<StarTriple> = Vec::new();
 
     //TODO: this
+    // loop until cartesian_stars is empty
+    // pop first star from cartesian_stars
+    // for i=0 each star in cartesian_stars that greater than i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
+    // for j=1 each star in cartesian_stars that != i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
+    // generate a star triple, push it to star_triples
 
     star_triples
 }
@@ -284,7 +289,7 @@ impl StarAtCartesian {
     //translates theta into radians
     fn anglularDistance(&self, other: &StarAtCartesian) -> f64 {
         let theta = self.unitVecs(other) * (180.0 / std::f64::consts::PI);
-        theta.acos()
+        theta.acos() //returns the angle in radians
     }
     //calculates the internal angle between three stars
     fn internal_angle(&self, vertex: &StarAtCartesian, other: &StarAtCartesian) -> f64 {
