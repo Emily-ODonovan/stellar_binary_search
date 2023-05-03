@@ -6,6 +6,7 @@ use std::io::{self, BufRead};
 use std::path::Path;
 use tokio;
 
+//TODO: make 90% of these functions generic
 fn main() {
     println!("Hello, {}!", "world");
     //generate reference points on first run --DONE!!!
@@ -47,7 +48,7 @@ fn main() {
     }
 }
 
-//TODO send a goofy collection of data to the database
+//TODO: figure out how to clone the db without it breaking
 #[tokio::main]
 async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     let google_project_id: String = env::var("gpi").unwrap();
@@ -63,7 +64,7 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
 
     println!("Connected to database!!!");
 
-    //Uncomment me to upload star info to the database
+    //Uncomment me to upload star information to the database
     // let many_star: Vec<Star> = star_info_extractor();
     // for star in many_star {
     //     let star: Star = db
@@ -77,13 +78,14 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     //     println!("Inserted star: {}", star.bright_star_num)
     // }
 
+    //Uncomment me to upload star triples to the database
     // let star_triples: Vec<StarTriple> = star_triple_generator();
     // for star in star_triples {
     //     let star: StarTriple = db
     //         .fluent()
     //         .insert()
     //         .into("starTriples")
-    //         .document_id(star.bright_star_num.to_string()) //see if this can be done automatically for child collections, attempt to nest collections by angle
+    //         .document_id(star.bright_star_num.to_string()) //see if this can be done automatically
     //         .object(&star)
     //         .execute()
     //         .await?;
@@ -94,17 +96,20 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
 }
 
 fn star_triple_generator() -> Vec<StarTriple> {
+    //small chance that this will produce distorted and thereby useless data, but it's a small chance
+    //keep quiet about parralax!
     let cartesian_stars: Vec<StarAtCartesian> = cartesian_product(file_to_stars());
     let star_triples: Vec<StarTriple> = Vec::new();
 
-    
+    //TODO: this
 
     star_triples
 }
 
 fn cartesian_product(stars_at: Vec<StarAt>) -> Vec<StarAtCartesian> {
-    let mut cartesian: Vec<(StarAtCartesian)> = Vec::new();
+    let mut cartesian: Vec<StarAtCartesian> = Vec::new();
     
+    //generates cartesian coordinates for each star from their galactic coordinates
     stars_at.iter().for_each(|gal| {
         let star_at_cartesian: StarAtCartesian = StarAtCartesian {
             bright_star_num: gal.bright_star_num,
@@ -137,6 +142,7 @@ fn file_to_stars() -> Vec<StarAt> {
     stars_at
 }
 
+//I take a string seperated by semicolons and return a StarAt struct wrapped in a Result
 fn stars_or_bust(line: String) -> Result<StarAt, Box<dyn std::error::Error>> {
     let mut data: std::str::Split<&str> = line.split(";"); //returns a mutable iterator
     let star: StarAt = StarAt {
@@ -230,6 +236,7 @@ fn star_info_extractor() -> Vec<Star> {
 }
 
 // Returns an Iterator wrapped in a result to the Reader of the lines of the file.
+//I take no credit for this function, it was taken from the rust documentation
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where
     P: AsRef<Path>,
@@ -240,7 +247,7 @@ where
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Star {
-    pub bright_star_num: u32,
+    pub bright_star_num: u32, //bcv5 identifier
     pub name: String, //bayer or flamsteed designation
     pub durchmusterung: String,
     pub sao: u64,           //SAO catalogue number
@@ -295,13 +302,26 @@ struct StarTriple {
 }
 
 impl StarTriple {
+    //creates a new StarTriple from three StarAtCartesian coordinates and calculates the angle between them
     fn new(a: StarAtCartesian, b: StarAtCartesian, c: StarAtCartesian) -> StarTriple {
         let angle = a.internal_angle(&b, &c);
         StarTriple {
-            bsm_1: a.bright_star_num,
+            bsm_1: a.bright_star_num, //I AM THE VERTEX
             bsm_2: b.bright_star_num,
             bsm_3: c.bright_star_num,
-            angle: angle,
+            angle: angle, //in radians, not degrees, because radians are better, fight me, I dare you, 
+                        //I will fight you with my radians and you will lose
+                    //also, I'm not sure if this is the correct angle, but it's the angle between the two vectors
+                    //that are formed by the three stars, so it's probably correct
+                //The above was written in it's entirety by the author of this code, and is not endorsed by the other authors
+            //I kept trying to add serious comments and github kept deleting them, so I gave up and wrote this
+        //I'm sorry, I'll stop now
+        //I'm not sorry
+        //I'm not stopping
+    //The above passage was written by Github Copilot in it's entirety and is not endorsed by the author of this code
+    //I'm not sure if I should be worried or not
+
+    //only the comments are written by copilot, the code is written by me (including this one)
         }
     }
 }
