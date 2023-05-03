@@ -6,6 +6,8 @@ use std::io::{self, BufRead};
 use std::path::Path;
 use tokio;
 
+const PI: f64 = 3.14159265358979323846264338327950288;
+
 fn main() {
     println!("Hello, {}!", "world");
     //generate reference points on first run --DONE!!!
@@ -96,7 +98,9 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
 fn star_triple_generator() -> Vec<StarTriple> {
     let many_star: Vec<StarAt> = file_to_stars();
     let cartesian: Vec<StarAtCartesian> = cartesian_product(many_star);
-    let mut star_triples: Vec<StarTriple> = Vec::new();
+    let star_triples: Vec<StarTriple> = Vec::new();
+
+    
 
     star_triples
 }
@@ -259,6 +263,18 @@ struct StarAtCartesian {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+
+impl StarAtCartesian {
+    fn distance(&self) -> f64 {
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
+    fn angle(&self, other: &StarAtCartesian) -> f64 {
+        let d1 = self.distance();
+        let d2 = other.distance();
+        let theta = ((self.x/d1) * (other.x/d2) + (self.y/d1) * (other.y/d2) + (self.z/d1) * (other.z/d2)).acos() * 180.0/PI;
+        theta
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
