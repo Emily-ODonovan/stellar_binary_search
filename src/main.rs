@@ -85,7 +85,7 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     //         .fluent()
     //         .insert()
     //         .into("starTriples")
-    //         .document_id(star.bright_star_num.to_string()) //see if this can be done automatically
+    //         .document_id(star.bright_star_num.trunc().to_string()) //see if this can be done automatically
     //         .object(&star)
     //         .execute()
     //         .await?;
