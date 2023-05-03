@@ -1,6 +1,6 @@
 /target
 
-key.json:
-    @echo "Please create a service account key and save it as key.json"
-    @echo "https://console.cloud.google.com/apis/credentials/serviceaccountkey"
-    @exit 1
+.json
+    #@echo "Please create a service account key and save it as key.json"
+    #@echo "https://console.cloud.google.com/apis/credentials/serviceaccountkey"
+    #@exit 1
