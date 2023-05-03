@@ -19,15 +19,13 @@ fn main() {
 
     env::set_var("gpi", "stellarstarsearch");
     env::set_var("GOOGLE_APPLICATION_CREDENTIALS", "key.json");
-
-    env::set_var("FIRESTORE_EMULATOR_HOST","127.0.0.1:8080");
-
+    env::set_var("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080");
 
     //genereates star_triples on second, file read can be excluded
     //--TODO generate_star_triples(star_at);
 
     //generates misc star data on third -> file
-    // let star_info: Vec<Star> = star_info_extractor();
+    let star_info: Vec<Star> = star_info_extractor();
     // star_info.iter().for_each(|x| {
     //     println!(
     //         "number: {} name: {} durch: {} sao: {} fk5: {} long: {} lat: {}",
@@ -41,17 +39,11 @@ fn main() {
     //     )
     // });
 
-    let my_star: Star = Star {
-        bright_star_num: 1,
-        name: "test".to_string(),
-        durchmusterung: "test".to_string(),
-        sao: 1,
-        fk5: 1,
-        galactic_long: 1.0,
-        galactic_lat: 1.0,
-    };
+    let db: Result<FirestoreDb, Box<dyn std::error::Error>> = connect_to_db();
 
-    let db = connect_to_db(my_star.clone());
+    if db.is_err() {
+        println!("Sad! {}", db.err().unwrap());
+    }
 }
 
 //TODO send a goofy collection of data to the database
@@ -61,25 +53,28 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     println!("Connecting to database...");
     println!("Project ID: {}", google_project_id);
 
-    // let db = FirestoreDb::new(google_project_id).await?;
-    let db = FirestoreDb::with_options_token_source(
+    let db: FirestoreDb = FirestoreDb::with_options_token_source(
         FirestoreDbOptions::new(google_project_id),
         gcloud_sdk::GCP_DEFAULT_SCOPES.clone(),
-        gcloud_sdk::TokenSourceType::File("key.json".into())
-    ).await?;
+        gcloud_sdk::TokenSourceType::File("key.json".into()),
+    )
+    .await?;
 
     println!("Connected to database!!!");
 
-    let object_returned: Star = db
-        .fluent()
-        .insert()
-        .into("testCollection")
-        .document_id(&my_star.bright_star_num.to_string())
-        .object(&my_star)
-        .execute()
-        .await?;
-
-    println!("Inserted object: {:?}", object_returned);
+    //Uncomment me to upload star info to the database
+    // let many_star: Vec<Star> = star_info_extractor();
+    // for star in many_star {
+    //     let star: Star = db
+    //         .fluent()
+    //         .insert()
+    //         .into("starInfo")
+    //         .document_id(star.bright_star_num.to_string())
+    //         .object(&star)
+    //         .execute()
+    //         .await?;
+    //     println!("Inserted star: {}", star.bright_star_num)
+    // }
 
     Ok(db)
 }
