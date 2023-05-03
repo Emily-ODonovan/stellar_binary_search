@@ -22,10 +22,11 @@ fn main() {
     env::set_var("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080");
 
     //genereates star_triples on second, file read can be excluded
-    //--TODO generate_star_triples(star_at);
-
+    let star_triples = star_triple_generator();
+    println!("star triples: {:?}", star_triples.len());
+    
     //generates misc star data on third -> file
-    let star_info: Vec<Star> = star_info_extractor();
+    // let star_info: Vec<Star> = star_info_extractor();
     // star_info.iter().for_each(|x| {
     //     println!(
     //         "number: {} name: {} durch: {} sao: {} fk5: {} long: {} lat: {}",
@@ -76,7 +77,27 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     //     println!("Inserted star: {}", star.bright_star_num)
     // }
 
+    // let star_triples: Vec<StarTriple> = star_triple_generator();
+    // for star in star_triples {
+    //     let star: StarTriple = db
+    //         .fluent()
+    //         .insert()
+    //         .into("starTriples")
+    //         .document_id(star.bright_star_num.to_string()) //see if this can be done automatically for child collections, attempt to nest collections by angle
+    //         .object(&star)
+    //         .execute()
+    //         .await?;
+    //     println!("Inserted star: {}", star.bright_star_num)
+    // }
+
     Ok(db)
+}
+
+fn star_triple_generator() -> Vec<StarTriple> {
+    let many_star: Vec<StarAt> = file_to_stars();
+    let mut star_triples: Vec<StarTriple> = Vec::new();
+
+    star_triples
 }
 
 fn file_to_stars() -> Vec<StarAt> {
@@ -219,8 +240,8 @@ struct StarAt {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct StarTriple {
-    pub bsm_1: u32, //bright star number 1
-    pub bsm_2: u32, //bright star number 2
-    pub bsm_3: u32, //bright star number 3
+    pub bsm_1: u32, //bright star number of middle star
+    pub bsm_2: u32, //bright star number of left star
+    pub bsm_3: u32, //bright star number of right star
     pub angle: f64, //angle between the 3 stars
 }
