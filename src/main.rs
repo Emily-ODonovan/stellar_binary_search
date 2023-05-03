@@ -56,7 +56,7 @@ fn main() {
 
 //TODO send a goofy collection of data to the database
 #[tokio::main]
-async fn connect_to_db(my_star: Star) -> Result<FirestoreDb, Box<dyn std::error::Error>> {
+async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     let google_project_id: String = env::var("gpi").unwrap();
     println!("Connecting to database...");
     println!("Project ID: {}", google_project_id);
