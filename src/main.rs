@@ -103,7 +103,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
 
     //TODO: this
     // loop until cartesian_stars is empty
-    // pop first star from cartesian_stars
+    // pop star from cartesian_stars
     // for i=0 each star in cartesian_stars that greater than i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
     // for j=1 each star in cartesian_stars that != i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
     // generate a star triple, push it to star_triples
