@@ -23,13 +23,13 @@ fn main() {
     env::set_var("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080");
 
     //genereates star_triples on second, file read can be excluded
-    let star_triples: Vec<StarTriple> = star_triple_generator();
-    star_triples.iter().for_each(|x: &StarTriple| {
-        println!(
-            "star vertex: {} star left: {} star right {} angle {}",
-            x.bsm_1, x.bsm_2, x.bsm_3, x.angle
-        )
-    });
+    // let star_triples: Vec<StarTriple> = star_triple_generator();
+    // star_triples.iter().for_each(|x: &StarTriple| {
+    //     println!(
+    //         "star vertex: {} star left: {} star right {} angle {}",
+    //         x.bsm_1, x.bsm_2, x.bsm_3, x.angle
+    //     )
+    // });
 
     //generates misc star data on third -> file
     // let star_info: Vec<Star> = star_info_extractor();
@@ -84,18 +84,18 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     // }
 
     //Uncomment me to upload star triples to the database
-    // let star_triples: Vec<StarTriple> = star_triple_generator();
-    // for star in star_triples {
-    //     let star: StarTriple = db
-    //         .fluent()
-    //         .insert()
-    //         .into("starTriples")
-    //         .document_id(star.bright_star_num.trunc().to_string()) //see if this can be done automatically
-    //         .object(&star)
-    //         .execute()
-    //         .await?;
-    //     println!("Inserted star: {}", star.bright_star_num)
-    // }
+    let star_triples: Vec<StarTriple> = star_triple_generator();
+    for star in star_triples {
+        let star: StarTriple = db
+            .fluent()
+            .insert()
+            .into("starTriples")
+            .generate_document_id() //see if this can be done automatically
+            .object(&star)
+            .execute()
+            .await?;
+        println!("Inserted star: {}", star.bsm_1)
+    }
 
     Ok(db)
 }
@@ -119,7 +119,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
                                 cartesian_stars[i],
                                 cartesian_stars[j],
                             ));
-                            println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think
+                            // println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think
                         }
                     }
                 }
