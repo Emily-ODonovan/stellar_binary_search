@@ -23,9 +23,14 @@ fn main() {
     env::set_var("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080");
 
     //genereates star_triples on second, file read can be excluded
-    let star_triples = star_triple_generator();
-    println!("star triples: {:?}", star_triples.len());
-    
+    let star_triples: Vec<StarTriple> = star_triple_generator();
+    star_triples.iter().for_each(|x: &StarTriple| {
+        println!(
+            "star vertex: {} star left: {} star right {} angle {}",
+            x.bsm_1, x.bsm_2, x.bsm_3, x.angle
+        )
+    });
+
     //generates misc star data on third -> file
     // let star_info: Vec<Star> = star_info_extractor();
     // star_info.iter().for_each(|x| {
@@ -41,11 +46,11 @@ fn main() {
     //     )
     // });
 
-    let db: Result<FirestoreDb, Box<dyn std::error::Error>> = connect_to_db();
+    // let db: Result<FirestoreDb, Box<dyn std::error::Error>> = connect_to_db();
 
-    if db.is_err() {
-        println!("Sad! {}", db.err().unwrap());
-    }
+    // if db.is_err() {
+    //     println!("Sad! {}", db.err().unwrap());
+    // }
 }
 
 //TODO: figure out how to clone the db without it breaking
@@ -96,33 +101,51 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
 }
 
 fn star_triple_generator() -> Vec<StarTriple> {
+    println!("Generating star triples...");
     //small chance that this will produce distorted and thereby useless data, but it's a small chance
     //keep quiet about parralax!
-    let cartesian_stars: Vec<StarAtCartesian> = cartesian_product(file_to_stars());
-    let star_triples: Vec<StarTriple> = Vec::new();
-
-    //TODO: this
-    // loop until cartesian_stars is empty
-    // pop star from cartesian_stars
-    // for i=0 each star in cartesian_stars that greater than i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
-    // for j=1 each star in cartesian_stars that != i AND is within 0.2~0.5 radians of the popped star (anglularDistance)
-    // generate a star triple, push it to star_triples
+    let mut cartesian_stars: Vec<StarAtCartesian> = cartesian_product(file_to_stars());
+    let mut star_triples: Vec<StarTriple> = Vec::new();
+    while cartesian_stars.len() > 0 {
+        let star: Option<StarAtCartesian> = cartesian_stars.pop();
+        if star.is_some() {
+            let star: StarAtCartesian = star.unwrap();
+            for i in 0..cartesian_stars.len() {
+                if star.angular_distance(&cartesian_stars[i]) < 0.5 {
+                    for j in 1..cartesian_stars.len() {
+                        if star.angular_distance(&cartesian_stars[j]) < 0.5 && j != i {
+                            star_triples.push(StarTriple::new(
+                                star,
+                                cartesian_stars[i],
+                                cartesian_stars[j],
+                            ));
+                            println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think
+                        }
+                    }
+                }
+            }
+        } else {
+            break;
+        }
+    }
+    //TODO: asserteq! that this retuns legible data
 
     star_triples
 }
 
 fn cartesian_product(stars_at: Vec<StarAt>) -> Vec<StarAtCartesian> {
     let mut cartesian: Vec<StarAtCartesian> = Vec::new();
-    
+    println!("Generating cartesian coordinates...");
     //generates cartesian coordinates for each star from their galactic coordinates
-    stars_at.iter().for_each(|gal| {
-        let star_at_cartesian: StarAtCartesian = StarAtCartesian {
-            bright_star_num: gal.bright_star_num,
-            x: gal.galactic_long.cos() * gal.galactic_lat.cos(),
-            y: gal.galactic_long.sin() * gal.galactic_lat.cos(),
-            z: gal.galactic_lat.sin(),
-        };
-        println!("number: {} x: {} y: {} z: {}", star_at_cartesian.bright_star_num, star_at_cartesian.x, star_at_cartesian.y, star_at_cartesian.z);
+    stars_at.iter().for_each(|gal: &StarAt| {
+        let star_at_cartesian: StarAtCartesian = StarAtCartesian::new(gal);
+        println!(
+            "Star {} at cartesian coordinates: {}, {}, {}",
+            star_at_cartesian.bright_star_num,
+            star_at_cartesian.x,
+            star_at_cartesian.y,
+            star_at_cartesian.z
+        );
         cartesian.push(star_at_cartesian);
     });
     cartesian
@@ -253,7 +276,7 @@ where
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Star {
     pub bright_star_num: u32, //bcv5 identifier
-    pub name: String, //bayer or flamsteed designation
+    pub name: String,         //bayer or flamsteed designation
     pub durchmusterung: String,
     pub sao: u64,           //SAO catalogue number
     pub fk5: u64,           //FK5 catalogue number
@@ -267,6 +290,7 @@ struct StarAt {
     pub galactic_long: f64, //galactic longitude 5 bytes
     pub galactic_lat: f64,  //galactic latitude
 }
+#[derive(Copy, Clone)]
 struct StarAtCartesian {
     pub bright_star_num: u32,
     pub x: f64,
@@ -275,26 +299,49 @@ struct StarAtCartesian {
 }
 
 impl StarAtCartesian {
+    fn new(star: &StarAt) -> StarAtCartesian {
+        StarAtCartesian {
+            bright_star_num: star.bright_star_num,
+            x: star.galactic_long.cos() * star.galactic_lat.cos(),
+            y: star.galactic_long.sin() * star.galactic_lat.cos(),
+            z: star.galactic_lat.sin(),
+        }
+    }
     //calculates the magnitude of the vector from the origin (that's us!) to the star
     fn magnitude(&self) -> f64 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
-    //calculates the unit vector for two points and multiplies them by the dot product do get theta
-    fn unitVecs(&self, other: &StarAtCartesian) -> f64 {
+    //calculates two unit vectors and multiplies them to get the dot product / cos(theta)
+    fn unit_vecs(&self, other: &StarAtCartesian) -> f64 {
         let d1 = self.magnitude();
         let d2 = other.magnitude();
-        let theta = (self.x/d1) * (other.x/d2) + (self.y/d1) * (other.y/d2) + (self.z/d1) * (other.z/d2);
-        theta
+        let theta = (self.x / d1) * (other.x / d2)
+            + (self.y / d1) * (other.y / d2)
+            + (self.z / d1) * (other.z / d2);
+        theta.acos()
+    }
+    //calculates the cross product of two vectors self = vertex, other = star1, another = star2
+    fn cross_product(&self, other: &StarAtCartesian, another: &StarAtCartesian) -> StarAtCartesian {
+        StarAtCartesian {
+            bright_star_num: 0,
+            x: ((other.y - self.y) * (another.z - self.z))
+                - ((other.z - self.z) * (another.y - self.y)),
+            y: ((other.z - self.z) * (another.x - self.x))
+                - ((other.x - self.x) * (another.z - self.z)),
+            z: ((other.x - self.x) * (another.y - self.y))
+                - ((other.y - self.y) * (another.x - self.x)),
+        }
     }
     //translates theta into radians
-    fn anglularDistance(&self, other: &StarAtCartesian) -> f64 {
-        let theta = self.unitVecs(other) * (180.0 / std::f64::consts::PI);
+    fn angular_distance(&self, other: &StarAtCartesian) -> f64 {
+        let theta = self.unit_vecs(other);
         theta.acos() //returns the angle in radians
     }
     //calculates the internal angle between three stars
-    fn internal_angle(&self, vertex: &StarAtCartesian, other: &StarAtCartesian) -> f64 {
-        let theta = self.unitVecs(vertex) * self.unitVecs(other);
-        theta.acos()
+    fn internal_angle(&self, other: &StarAtCartesian, another: &StarAtCartesian) -> f64 {
+        let magnitude_cross = self.cross_product(other, another).magnitude();
+        let theta = magnitude_cross.atan2(self.x * other.x + self.y * other.y + self.z * other.z);
+        theta
     }
 }
 
@@ -309,24 +356,23 @@ struct StarTriple {
 impl StarTriple {
     //creates a new StarTriple from three StarAtCartesian coordinates and calculates the angle between them
     fn new(a: StarAtCartesian, b: StarAtCartesian, c: StarAtCartesian) -> StarTriple {
-        let angle = a.internal_angle(&b, &c);
         StarTriple {
             bsm_1: a.bright_star_num, //I AM THE VERTEX
             bsm_2: b.bright_star_num,
             bsm_3: c.bright_star_num,
-            angle: angle, //in radians, not degrees, because radians are better, fight me, I dare you, 
-                        //I will fight you with my radians and you will lose
-                    //also, I'm not sure if this is the correct angle, but it's the angle between the two vectors
-                    //that are formed by the three stars, so it's probably correct
-                //The above was written in it's entirety by the author of this code, and is not endorsed by the other authors
-            //I kept trying to add serious comments and github kept deleting them, so I gave up and wrote this
-        //I'm sorry, I'll stop now
-        //I'm not sorry
-        //I'm not stopping
-    //The above passage was written by Github Copilot in it's entirety and is not endorsed by the author of this code
-    //I'm not sure if I should be worried or not
+            angle: a.internal_angle(&b, &c), //in radians, not degrees, because radians are better, fight me, I dare you,
+                                             //I will fight you with my radians and you will lose
+                                             //also, I'm not sure if this is the correct angle, but it's the angle between the two vectors
+                                             //that are formed by the three stars, so it's probably correct
+                                             //The above was written in it's entirety by the author of this code, and is not endorsed by the other authors
+                                             //I kept trying to add serious comments and github kept deleting them, so I gave up and wrote this
+                                             //I'm sorry, I'll stop now
+                                             //I'm not sorry
+                                             //I'm not stopping
+                                             //The above passage was written by Github Copilot in it's entirety and is not endorsed by the author of this code
+                                             //I'm not sure if I should be worried or not
 
-    //only the comments are written by copilot, the code is written by me (including this one)
+                                             //only the comments are written by copilot, the code is written by me (including this one)
         }
     }
 }
