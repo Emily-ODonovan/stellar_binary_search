@@ -111,6 +111,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
     //keep quiet about parralax!
     let mut cartesian_stars: Vec<StarAtCartesian> = cartesian_product(file_to_stars());
     let mut star_triples: Vec<StarTriple> = Vec::new();
+    let mut filter: Vec<TripleFilter> = Vec::new();
     while cartesian_stars.len() > 0 {
         let star: Option<StarAtCartesian> = cartesian_stars.pop();
         if star.is_some() {
@@ -118,13 +119,14 @@ fn star_triple_generator() -> Vec<StarTriple> {
             for i in 0..cartesian_stars.len() {
                 if star.angular_distance(&cartesian_stars[i]) < 0.1 {
                     for j in 1..cartesian_stars.len() {
-                        if star.angular_distance(&cartesian_stars[j]) < 0.1 && j != i {
+                        if star.angular_distance(&cartesian_stars[j]) < 0.1 && j != i && !filter.contains(&TripleFilter::new(star.bright_star_num, cartesian_stars[i].bright_star_num, cartesian_stars[j].bright_star_num)){
                             star_triples.push(StarTriple::new(
                                 star,
                                 cartesian_stars[i],
                                 cartesian_stars[j],
                             ));
-                            // println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think... I hope...
+                            filter.push(TripleFilter::new(star.bright_star_num, cartesian_stars[i].bright_star_num, cartesian_stars[j].bright_star_num));
+                            println!("Star Triple Angle? {}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think... I hope...
                         }
                     }
                 }
@@ -133,6 +135,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
             break;
         }
     }
+    
     println!("{} star triples generated", star_triples.len());
     star_triples
 }
@@ -324,7 +327,7 @@ impl StarAtCartesian {
         let theta = (self.x / d1) * (other.x / d2)
             + (self.y / d1) * (other.y / d2)
             + (self.z / d1) * (other.z / d2);
-        theta
+        theta.acos()
     }
     //calculates the cross product of two vectors self = vertex, other = star1, another = star2
     fn cross_product(&self, other: &StarAtCartesian, another: &StarAtCartesian) -> StarAtCartesian {
@@ -379,6 +382,26 @@ impl StarTriple {
                                              //I'm not sure if I should be worried or not
 
                                              //only the comments are written by copilot, the code is written by me (including this one)
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone)]
+struct TripleFilter {
+    pub s1: u32,
+    pub s2: u32,
+    pub s3: u32
+}
+
+impl TripleFilter {
+    fn new(s1: u32, s2: u32, s3: u32) -> TripleFilter {
+        //first sort them
+        let mut s = vec![s1, s2, s3];
+        s.sort();
+        TripleFilter {
+            s1: s[0],
+            s2: s[1],
+            s3: s[2]
         }
     }
 }
