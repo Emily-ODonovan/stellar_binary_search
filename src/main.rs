@@ -116,9 +116,9 @@ fn star_triple_generator() -> Vec<StarTriple> {
         if star.is_some() {
             let star: StarAtCartesian = star.unwrap();
             for i in 0..cartesian_stars.len() {
-                if star.angular_distance(&cartesian_stars[i]) < 0.5 {
+                if star.angular_distance(&cartesian_stars[i]) < 1.0 {
                     for j in 1..cartesian_stars.len() {
-                        if star.angular_distance(&cartesian_stars[j]) < 0.5 && j != i {
+                        if star.angular_distance(&cartesian_stars[j]) < 1.0 && j != i {
                             star_triples.push(StarTriple::new(
                                 star,
                                 cartesian_stars[i],
@@ -323,7 +323,7 @@ impl StarAtCartesian {
         let theta = (self.x / d1) * (other.x / d2)
             + (self.y / d1) * (other.y / d2)
             + (self.z / d1) * (other.z / d2);
-        theta.acos()
+        theta
     }
     //calculates the cross product of two vectors self = vertex, other = star1, another = star2
     fn cross_product(&self, other: &StarAtCartesian, another: &StarAtCartesian) -> StarAtCartesian {
