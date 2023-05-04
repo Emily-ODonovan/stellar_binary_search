@@ -1,5 +1,4 @@
 use firestore::*;
-use gcloud_sdk::google::firestore::v1::run_query_response::ContinuationSelector;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::File;
