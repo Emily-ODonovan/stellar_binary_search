@@ -1,4 +1,5 @@
 use firestore::*;
+use gcloud_sdk::google::firestore::v1::run_query_response::ContinuationSelector;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::File;
@@ -116,9 +117,9 @@ fn star_triple_generator() -> Vec<StarTriple> {
         if star.is_some() {
             let star: StarAtCartesian = star.unwrap();
             for i in 0..cartesian_stars.len() {
-                if star.angular_distance(&cartesian_stars[i]) < 1.0 {
+                if star.angular_distance(&cartesian_stars[i]) < 0.1 {
                     for j in 1..cartesian_stars.len() {
-                        if star.angular_distance(&cartesian_stars[j]) < 1.0 && j != i {
+                        if star.angular_distance(&cartesian_stars[j]) < 0.1 && j != i {
                             star_triples.push(StarTriple::new(
                                 star,
                                 cartesian_stars[i],
@@ -133,8 +134,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
             break;
         }
     }
-    //TODO: asserteq! that this retuns legible data
-
+    println!("{} star triples generated", star_triples.len());
     star_triples
 }
 
@@ -143,15 +143,17 @@ fn cartesian_product(stars_at: Vec<StarAt>) -> Vec<StarAtCartesian> {
     println!("Generating cartesian coordinates...");
     //generates cartesian coordinates for each star from their galactic coordinates
     stars_at.iter().for_each(|gal: &StarAt| {
-        let star_at_cartesian: StarAtCartesian = StarAtCartesian::new(gal);
-        println!(
-            "Star {} at cartesian coordinates: {}, {}, {}",
-            star_at_cartesian.bright_star_num,
-            star_at_cartesian.x,
-            star_at_cartesian.y,
-            star_at_cartesian.z
-        );
-        cartesian.push(star_at_cartesian);
+        if gal.galactic_lat != 0.0 || gal.galactic_long != 0.0 {
+            let star_at_cartesian: StarAtCartesian = StarAtCartesian::new(gal);
+            println!(
+                "Star {} at cartesian coordinates: {}, {}, {}",
+                star_at_cartesian.bright_star_num,
+                star_at_cartesian.x,
+                star_at_cartesian.y,
+                star_at_cartesian.z
+            );
+            cartesian.push(star_at_cartesian);
+        }
     });
     cartesian
 }
