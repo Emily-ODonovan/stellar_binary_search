@@ -82,7 +82,7 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
             .object(&star)
             .execute()
             .await?;
-        println!("Inserted star: {}", star.bright_star_num)
+        println!("Inserted star: {}", star.bright_star_num);
     }
 
     println!("Star information uploaded!!!");
@@ -98,7 +98,7 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
             .object(&star)
             .execute()
             .await?;
-        println!("Inserted star triple: {}", star.bsm_1)
+        println!("Inserted star triple: {}", star.bsm_1);
     }
     println!("Star triples uploaded!!!");
 
