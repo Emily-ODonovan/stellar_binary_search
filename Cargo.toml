@@ -19,4 +19,4 @@ name = "stellar_binary_search"
 path = "src/main.rs"
 
 [profile.dev]
-opt-level = 0
+opt-level = 3

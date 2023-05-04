@@ -46,11 +46,13 @@ fn main() {
     //     )
     // });
 
-    // let db: Result<FirestoreDb, Box<dyn std::error::Error>> = connect_to_db();
+    let db: Result<FirestoreDb, Box<dyn std::error::Error>> = connect_to_db();
 
-    // if db.is_err() {
-    //     println!("Sad! {}", db.err().unwrap());
-    // }
+    if db.is_err() {
+        println!("Sad! {}", db.err().unwrap());
+    } else {
+        println!("Great success!");
+    }
 }
 
 //TODO: figure out how to clone the db without it breaking
@@ -70,18 +72,20 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
     println!("Connected to database!!!");
 
     //Uncomment me to upload star information to the database
-    // let many_star: Vec<Star> = star_info_extractor();
-    // for star in many_star {
-    //     let star: Star = db
-    //         .fluent()
-    //         .insert()
-    //         .into("starInfo")
-    //         .document_id(star.bright_star_num.to_string())
-    //         .object(&star)
-    //         .execute()
-    //         .await?;
-    //     println!("Inserted star: {}", star.bright_star_num)
-    // }
+    let many_star: Vec<Star> = star_info_extractor();
+    for star in many_star {
+        let star: Star = db
+            .fluent()
+            .insert()
+            .into("starInfo")
+            .document_id(star.bright_star_num.to_string())
+            .object(&star)
+            .execute()
+            .await?;
+        println!("Inserted star: {}", star.bright_star_num)
+    }
+
+    println!("Star information uploaded!!!");
 
     //Uncomment me to upload star triples to the database
     let star_triples: Vec<StarTriple> = star_triple_generator();
@@ -90,12 +94,13 @@ async fn connect_to_db() -> Result<FirestoreDb, Box<dyn std::error::Error>> {
             .fluent()
             .insert()
             .into("starTriples")
-            .generate_document_id() //see if this can be done automatically
+            .generate_document_id()
             .object(&star)
             .execute()
             .await?;
-        println!("Inserted star: {}", star.bsm_1)
+        println!("Inserted star triple: {}", star.bsm_1)
     }
+    println!("Star triples uploaded!!!");
 
     Ok(db)
 }
@@ -119,7 +124,7 @@ fn star_triple_generator() -> Vec<StarTriple> {
                                 cartesian_stars[i],
                                 cartesian_stars[j],
                             ));
-                            // println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think
+                            // println!("{}", star_triples.last().unwrap().angle); //IT WORKS!!!... I think... I hope...
                         }
                     }
                 }
